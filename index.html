@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Správa plateb</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --success-hover: #15803d;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --gray: #6b7280;
+            --gray-hover: #4b5563;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin: 14px 0 6px 0;
+            color: var(--text-main);
+        }
+
+        p.info-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        /* Custom Checkboxy / Přepínače */
+        .status-option {
+            display: flex;
+            align-items: center;
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .status-option:hover {
+            background: #f1f5f9;
+        }
+
+        .status-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .status-option span {
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        /* Tlačítka */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-gray { background: var(--gray); color: white; }
+        .btn-gray:hover { background: var(--gray-hover); }
+
+        .btn-pay {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+
+        /* Výpis plateb */
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .category-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .category-total {
+            font-size: 0.85rem;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .empty-trans {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            margin: 15px 0;
+            font-size: 0.95rem;
+        }
+
+        .payment-item {
+            padding: 12px 6px;
+        }
+        .payment-item:last-child {
+            border-bottom: none;
+        }
+
+        .payment-row {
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .payment-row strong {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Modální / Překryvná okna */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .radio-option input {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Varovné / Potvrzovací mini modály */
+        .alert-modal {
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .alert-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .icon-warn { color: var(--danger); }
+        .icon-question { color: var(--primary); }
+
+        .alert-text {
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Admin: Zadávání plateb pro Alenu přes prázdniny</h1>
+        <hr>
+        <p class="info-text">Zde stačí zadávat platby a nebo stavy:</p>
+        <hr>
+        
+        <h2>Stavy na User stránce</h2>
+        <p class="info-text">Poznámka: Pokud není zvolen žádný stav (vše prázdné), user stránky fungují normálně v plném režimu.</p>
+        
+        <label class="status-option">
+            <input type="checkbox" id="check-2mfa" value="5">
+            <span>Zablokovat user stránku: 2MFA-SV (blokace z důvodu, že není ještě 26.6)</span>
+        </label>
+        
+        <label class="status-option">
+            <input type="checkbox" id="check-error" value="0">
+            <span>Zablokovat stránku z důvodu chyby - simulace chyby</span>
+        </label>
+
+        <hr>
+        <h2>Platby</h2>
+        <button class="btn btn-primary" id="btn-open-add" style="margin-top: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Přidat platbu
+        </button>
+
+        <h2 style="margin-top: 24px;">Aktuální platby:</h2>
+        <div id="payments-container">
+            <div class="empty-trans" id="global-empty-text">Načítání dat...</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-add-overlay">
+        <div class="modal">
+            <h3>Přidat novou platbu k úhradě</h3>
+            
+            <div class="form-group">
+                <label for="p-cena">Cena:</label>
+                <div class="input-wrapper">
+                    <input type="text" id="p-cena" class="form-control" maxlength="3" placeholder="000" inputmode="numeric">
+                    <span style="font-weight: bold; font-size: 0.95rem;">Kč</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="p-duvod">Důvod platby:</label>
+                <textarea id="p-duvod" class="form-control" rows="3" placeholder="Napište důvod..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="p-datum">Ze dne:</label>
+                <input type="date" id="p-datum" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label>Splatnost:</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="p-splatnost" value="tatinek_obchod" checked>
+                        <span>Až tatínek pojede do města / obchodu</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="p-splatnost" value="co_nejdrive_dnes">
+                        <span>Co nejdříve (dnes)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="p-splatnost" value="dnes_zitra">
+                        <span>Dnes - Zítra</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="p-splatnost" value="od_blatecaku">
+                        <span>Od Blatečáků</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-gray" id="btn-add-cancel">Zrušit</button>
+                <button class="btn btn-success" id="btn-add-confirm">Potvrdit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-warn-overlay">
+        <div class="modal alert-modal">
+            <span class="alert-icon icon-warn">⚠️</span>
+            <p class="alert-text">Varování: Pokračováním se neuložená data ztratí! Pokračovat?</p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="btn-warn-yes">Pokračovat</button>
+                <button class="btn btn-primary" id="btn-warn-no">Zpět</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-pay-overlay">
+        <div class="modal alert-modal">
+            <span class="alert-icon icon-question">❓</span>
+            <p class="alert-text" id="pay-modal-text">Opravdu bylo zaplaceno X Kč?</p>
+            <div class="modal-actions">
+                <button class="btn btn-success" id="btn-pay-yes">Ano, zaplaceno</button>
+                <button class="btn btn-gray" id="btn-pay-no">Ne, nezaplaceno - omyl</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Konfigurace Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4XUpxr5dNY4qUl5AMbQB3nyFwuaBxZQY",
+            authDomain: "alena-prazdniny-platby.firebaseapp.com",
+            databaseURL: "https://alena-prazdniny-platby-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "alena-prazdniny-platby",
+            storageBucket: "alena-prazdniny-platby.firebasestorage.app",
+            messagingSenderId: "992894953464",
+            appId: "1:992894953464:web:ae81c01953b784da69d80d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // DOM Prvky - Stavy
+        const check2mfa = document.getElementById('check-2mfa');
+        const checkError = document.getElementById('check-error');
+
+        // DOM Prvky - Modály
+        const modalAdd = document.getElementById('modal-add-overlay');
+        const modalWarn = document.getElementById('modal-warn-overlay');
+        const modalPay = document.getElementById('modal-pay-overlay');
+
+        // Pomocné proměnné
+        let activePayCategory = ''; 
+        let activePaySum = 0;
+
+        // --- ŘÍZENÍ STAVŮ (start_user) ---
+        // Sledování změn v DB pro zaškrtávátka
+        onValue(ref(db, 'start_user'), (snapshot) => {
+            if (!snapshot.exists()) {
+                set(ref(db, 'start_user'), "1");
+                setCheckboxes("1");
+            } else {
+                const val = snapshot.val().toString();
+                setCheckboxes(val);
+            }
+        });
+
+        function setCheckboxes(val) {
+            if (val === "5") {
+                check2mfa.checked = true;
+                checkError.checked = false;
+            } else if (val === "0") {
+                check2mfa.checked = false;
+                checkError.checked = true;
+            } else {
+                check2mfa.checked = false;
+                checkError.checked = false;
+            }
+        }
+
+        // Event listenery pro vzájemné vyloučení a změnu stavu
+        check2mfa.addEventListener('click', (e) => {
+            let nextVal = check2mfa.checked ? "5" : "1";
+            set(ref(db, 'start_user'), nextVal);
+        });
+
+        checkError.addEventListener('click', (e) => {
+            let nextVal = checkError.checked ? "0" : "1";
+            set(ref(db, 'start_user'), nextVal);
+        });
+
+
+        // --- STRUKTURA PRÁCE S MODÁLY & FORMULÁŘEM ---
+        // Pouze čísla do pole Cena (blokování ostatních znaků)
+        document.getElementById('p-cena').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+
+        // Otevření přidání platby
+        document.getElementById('btn-open-add').addEventListener('click', () => {
+            // Nastavení dnešního data
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById('p-datum').value = `${yyyy}-${mm}-${dd}`;
+            
+            // Vyčištění ostatních polí
+            document.getElementById('p-cena').value = '';
+            document.getElementById('p-duvod').value = '';
+            document.querySelector('input[name="p-splatnost"][value="tatinek_obchod"]').checked = true;
+
+            modalAdd.classList.add('active');
+        });
+
+        // Kliknutí na Zrušit ve formuláři -> vyvolání varování
+        document.getElementById('btn-add-cancel').addEventListener('click', () => {
+            modalWarn.classList.add('active');
+        });
+
+        // Varování: Pokračovat (Zahodit data)
+        document.getElementById('btn-warn-yes').addEventListener('click', () => {
+            modalWarn.classList.remove('active');
+            modalAdd.classList.remove('active');
+        });
+
+        // Varování: Zpět (Návrat k formuláři)
+        document.getElementById('btn-warn-no').addEventListener('click', () => {
+            modalWarn.classList.remove('active');
+        });
+
+        // Potvrdit formulář -> uložení do Firebase
+        document.getElementById('btn-add-confirm').addEventListener('click', () => {
+            const cenaRaw = document.getElementById('p-cena').value;
+            const duvod = document.getElementById('p-duvod').value.trim();
+            const datumRaw = document.getElementById('p-datum').value;
+            const splatnost = document.querySelector('input[name="p-splatnost"]:checked').value;
+
+            if (!cenaRaw) { alert('Prosím zadejte cenu.'); return; }
+            if (!duvod) { alert('Prosím zadejte důvod platby.'); return; }
+            if (!datumRaw) { alert('Prosím zvolte datum.'); return; }
+
+            // Převedení data z YYYY-MM-DD na český formát D.M.YYYY
+            const parts = datumRaw.split('-');
+            const datumCesky = `${parseInt(parts[2])}.${parseInt(parts[1])}.${parts[0]}`;
+
+            // Uložení do příslušné složky v transakce
+            const transRef = ref(db, `transakce/${splatnost}`);
+            const nováPlatbaRef = push(transRef);
+            
+            set(nováPlatbaRef, {
+                cena: parseInt(cenaRaw),
+                duvod: duvod,
+                datum: datumCesky
+            }).then(() => {
+                modalAdd.classList.remove('active');
+            }).catch(err => alert('Chyba při ukládání: ' + err));
+        });
+
+
+        // --- VYKRESLOVÁNÍ PLATEB Z DATABÁZE ---
+        const kategorieInfo = [
+            { id: 'tatinek_obchod', label: 'Až tatínek pojede do obchodu:' },
+            { id: 'co_nejdrive_dnes', label: 'Dnes:' },
+            { id: 'dnes_zitra', label: 'Dnes - Zítra:' },
+            { id: 'od_blatecaku', label: 'Od Blatečáků:' }
+        ];
+
+        onValue(ref(db, 'transakce'), (snapshot) => {
+            const container = document.getElementById('payments-container');
+            container.innerHTML = '';
+
+            if (!snapshot.exists()) {
+                container.innerHTML = '<div class="empty-trans">Žádné čekající transakce</div>';
+                return;
+            }
+
+            const data = snapshot.val();
+            let celkemJakakolivTransakce = false;
+
+            // Vykreslení striktně v definovaném pořadí
+            kategorieInfo.forEach(kat => {
+                const katData = data[kat.id];
+                let soucet = 0;
+                let polozkyHTML = '';
+
+                if (katData) {
+                    celkemJakakolivTransakce = true;
+                    Object.keys(katData).forEach(key => {
+                        const p = katData[key];
+                        soucet += parseInt(p.cena || 0);
+
+                        polozkyHTML += `
+                            <div class="payment-item">
+                                <div class="payment-row"><strong>Částka / výše ceny:</strong> ${p.cena} Kč</div>
+                                <div class="payment-row"><strong>Důvod platby:</strong> ${p.duvod}</div>
+                                <div class="payment-row"><strong>Ze dne:</strong> ${p.datum}</div>
+                            </div>
+                            <hr>
+                        `;
+                    });
+                    // Odstranění poslední nadbytečné dělící čáry z bloku položek
+                    polozkyHTML = polozkyHTML.substring(0, polozkyHTML.lastIndexOf('<hr>'));
+                }
+
+                // Generování HTML struktury bloku kategorie
+                const sekce = document.createElement('div');
+                sekce.style.marginBottom = '20px';
+                
+                sekce.innerHTML = `
+                    <div class="category-header">
+                        <span class="category-title">${kat.label}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="category-total">Celkem: ${soucet} Kč</span>
+                            ${soucet > 0 ? `<button class="btn btn-success btn-pay" data-cat="${kat.id}" data-sum="${soucet}">Zaplaceno</button>` : ''}
+                        </div>
+                    </div>
+                    <div style="padding: 5px 0;">
+                        ${soucet > 0 ? polozkyHTML : '<div class="empty-trans" style="font-size:0.85rem; margin:8px 0;">Žádné platby v této kategorii</div>'}
+                    </div>
+                `;
+                container.appendChild(sekce);
+            });
+
+            if(!celkemJakakolivTransakce) {
+                container.innerHTML = '<div class="empty-trans">Žádné čekající transakce</div>';
+            } else {
+                // Připojení eventů na nově vygenerovaná tlačítka "Zaplaceno"
+                document.querySelectorAll('.btn-pay').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        activePayCategory = e.target.getAttribute('data-cat');
+                        activePaySum = e.target.getAttribute('data-sum');
+                        document.getElementById('pay-modal-text').innerText = `Opravdu bylo zaplaceno ${activePaySum} Kč?`;
+                        modalPay.classList.add('active');
+                    });
+                });
+            }
+        });
+
+        // Smazání kategorie (Zaplaceno -> Ano)
+        document.getElementById('btn-pay-yes').addEventListener('click', () => {
+            if(activePayCategory) {
+                remove(ref(db, `transakce/${activePayCategory}`))
+                .then(() => {
+                    modalPay.classList.remove('active');
+                    activePayCategory = '';
+                }).catch(err => alert('Chyba při mazání: ' + err));
+            }
+        });
+
+        // Smazání kategorie (Zaplaceno -> Ne)
+        document.getElementById('btn-pay-no').addEventListener('click', () => {
+            modalPay.classList.remove('active');
+            activePayCategory = '';
+        });
+    </script>
+</body>
+</html>
